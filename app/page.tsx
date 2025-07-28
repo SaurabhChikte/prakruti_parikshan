@@ -13,6 +13,14 @@ interface SurveyData {
   questions: Question[]
 }
 
+interface ValidationState {
+  name: { isValid: boolean; message: string }
+  phone: { isValid: boolean; message: string }
+  email: { isValid: boolean; message: string }
+  city: { isValid: boolean; message: string }
+  gender: { isValid: boolean; message: string }
+}
+
 export default function Survey() {
   const [questions, setQuestions] = useState<Question[]>([])
   const [currentIndex, setCurrentIndex] = useState(0)
@@ -26,15 +34,45 @@ export default function Survey() {
   const [error, setError] = useState("")
   const [result, setResult] = useState<any>(null)
 
+  // Form validation states
+  const [formData, setFormData] = useState({
+    name: "",
+    phone: "",
+    email: "",
+    city: "",
+    gender: "",
+  })
+
+  const [validation, setValidation] = useState<ValidationState>({
+    name: { isValid: false, message: "" },
+    phone: { isValid: false, message: "" },
+    email: { isValid: false, message: "" },
+    city: { isValid: false, message: "" },
+    gender: { isValid: false, message: "" },
+  })
+
+  const [touched, setTouched] = useState({
+    name: false,
+    phone: false,
+    email: false,
+    city: false,
+    gender: false,
+  })
+
   useEffect(() => {
     loadQuestions()
   }, [])
 
-  // Reset selected option when question changes
+  // Set selected option when question changes (for going back)
   useEffect(() => {
-    setSelectedOption(null)
+    const currentAnswer = answers[`q${currentIndex}`]
+    if (currentAnswer) {
+      setSelectedOption(currentAnswer)
+    } else {
+      setSelectedOption(null)
+    }
     setIsProcessing(false)
-  }, [currentIndex])
+  }, [currentIndex, answers])
 
   const loadQuestions = async () => {
     try {
@@ -73,17 +111,216 @@ export default function Survey() {
     }, 1000)
   }
 
+  // Validation functions
+  const validateName = (name: string): { isValid: boolean; message: string } => {
+    const nameRegex = /^[a-zA-Zઅ-હ\s]+$/
+
+    if (!name.trim()) {
+      return { isValid: false, message: "નામ જરૂરી છે" }
+    }
+    if (name.trim().length < 2) {
+      return { isValid: false, message: "નામ ઓછામાં ઓછું 2 અક્ષર હોવું જોઈએ" }
+    }
+    if (name.trim().length > 50) {
+      return { isValid: false, message: "નામ 50 અક્ષરથી વધુ ન હોવું જોઈએ" }
+    }
+    if (!nameRegex.test(name.trim())) {
+      return { isValid: false, message: "નામમાં ફક્ત અક્ષરો અને સ્પેસ જ મંજૂર છે" }
+    }
+    return { isValid: true, message: "યોગ્ય નામ ✓" }
+  }
+
+  const validatePhone = (phone: string): { isValid: boolean; message: string } => {
+    const phoneRegex = /^[6-9]\d{9}$/
+
+    if (!phone.trim()) {
+      return { isValid: false, message: "ફોન નંબર જરૂરી છે" }
+    }
+    if (!/^\d+$/.test(phone.trim())) {
+      return { isValid: false, message: "ફક્ત નંબર જ મંજૂર છે" }
+    }
+    if (phone.trim().length !== 10) {
+      return { isValid: false, message: "ફોન નંબર 10 અંકનો હોવો જોઈએ" }
+    }
+    if (!phoneRegex.test(phone.trim())) {
+      return { isValid: false, message: "ફોન નંબર 6, 7, 8 અથવા 9 થી શરૂ થવો જોઈએ" }
+    }
+    return { isValid: true, message: "યોગ્ય ફોન નંબર ✓" }
+  }
+
+  const validateEmail = (email: string): { isValid: boolean; message: string } => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+    if (!email.trim()) {
+      return { isValid: false, message: "ઈમેલ જરૂરી છે" }
+    }
+    if (!email.includes("@")) {
+      return { isValid: false, message: "ઈમેલમાં @ હોવું જરૂરી છે" }
+    }
+    if (!emailRegex.test(email.trim())) {
+      return { isValid: false, message: "યોગ્ય ઈમેલ ફોર્મેટ નથી (example@domain.com)" }
+    }
+    if (email.trim().length > 100) {
+      return { isValid: false, message: "ઈમેલ 100 અક્ષરથી વધુ ન હોવું જોઈએ" }
+    }
+    return { isValid: true, message: "યોગ્ય ઈમેલ ✓" }
+  }
+
+  const validateCity = (city: string): { isValid: boolean; message: string } => {
+    const cityRegex = /^[a-zA-Zઅ-હ\s]+$/
+
+    if (!city.trim()) {
+      return { isValid: false, message: "શહેરનું નામ જરૂરી છે" }
+    }
+    if (city.trim().length < 2) {
+      return { isValid: false, message: "શહેરનું નામ ઓછામાં ઓછું 2 અક્ષર હોવું જોઈએ" }
+    }
+    if (city.trim().length > 50) {
+      return { isValid: false, message: "શહેરનું નામ 50 અક્ષરથી વધુ ન હોવું જોઈએ" }
+    }
+    if (!cityRegex.test(city.trim())) {
+      return { isValid: false, message: "શહેરના નામમાં ફક્ત અક્ષરો અને સ્પેસ જ મંજૂર છે" }
+    }
+    return { isValid: true, message: "યોગ્ય શહેરનું નામ ✓" }
+  }
+
+  const validateGender = (gender: string): { isValid: boolean; message: string } => {
+    if (!gender || !["Male", "Female", "Other"].includes(gender)) {
+      return { isValid: false, message: "લિંગ પસંદ કરવું જરૂરી છે" }
+    }
+    return { isValid: true, message: "લિંગ પસંદ કર્યું ✓" }
+  }
+
+  // Handle input changes with real-time validation
+  const handleInputChange = (field: keyof typeof formData, value: string) => {
+    const newFormData = { ...formData, [field]: value }
+    setFormData(newFormData)
+
+    // Validate the field
+    let fieldValidation
+    switch (field) {
+      case "name":
+        fieldValidation = validateName(value)
+        break
+      case "phone":
+        fieldValidation = validatePhone(value)
+        break
+      case "email":
+        fieldValidation = validateEmail(value)
+        break
+      case "city":
+        fieldValidation = validateCity(value)
+        break
+      case "gender":
+        fieldValidation = validateGender(value)
+        break
+      default:
+        fieldValidation = { isValid: false, message: "" }
+    }
+
+    setValidation((prev) => ({
+      ...prev,
+      [field]: fieldValidation,
+    }))
+  }
+
+  const handleBlur = (field: keyof typeof touched) => {
+    setTouched((prev) => ({ ...prev, [field]: true }))
+  }
+
+  const isFormValid = () => {
+    return Object.values(validation).every((field) => field.isValid)
+  }
+
+  const getInputStyle = (field: keyof ValidationState) => {
+    const baseStyle = {
+      width: "100%",
+      padding: "0.75rem 1rem",
+      borderRadius: "0.5rem",
+      fontSize: "1rem",
+      transition: "all 0.2s ease",
+      border: "2px solid #e5e7eb",
+    }
+
+    if (!touched[field]) {
+      return baseStyle
+    }
+
+    if (validation[field].isValid) {
+      return {
+        ...baseStyle,
+        borderColor: "#10b981",
+        backgroundColor: "#f0fdf4",
+      }
+    } else {
+      return {
+        ...baseStyle,
+        borderColor: "#ef4444",
+        backgroundColor: "#fef2f2",
+      }
+    }
+  }
+
+  const getValidationMessageStyle = (field: keyof ValidationState) => {
+    if (!touched[field] || !validation[field].message) {
+      return { display: "none" }
+    }
+
+    return {
+      fontSize: "0.875rem",
+      padding: "0.5rem 0.75rem",
+      marginTop: "0.5rem",
+      borderRadius: "0.375rem",
+      display: "block",
+      color: validation[field].isValid ? "#059669" : "#dc2626",
+      backgroundColor: validation[field].isValid ? "#d1fae5" : "#fee2e2",
+      border: `1px solid ${validation[field].isValid ? "#a7f3d0" : "#fecaca"}`,
+    }
+  }
+
   const submitSurvey = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+
+    // Mark all fields as touched to show validation messages
+    setTouched({
+      name: true,
+      phone: true,
+      email: true,
+      city: true,
+      gender: true,
+    })
+
+    // Validate all fields
+    const nameValidation = validateName(formData.name)
+    const phoneValidation = validatePhone(formData.phone)
+    const emailValidation = validateEmail(formData.email)
+    const cityValidation = validateCity(formData.city)
+    const genderValidation = validateGender(formData.gender)
+
+    setValidation({
+      name: nameValidation,
+      phone: phoneValidation,
+      email: emailValidation,
+      city: cityValidation,
+      gender: genderValidation,
+    })
+
+    const allValid =
+      nameValidation.isValid &&
+      phoneValidation.isValid &&
+      emailValidation.isValid &&
+      cityValidation.isValid &&
+      genderValidation.isValid
+
+    if (!allValid) {
+      setError("કૃપા કરીને બધી ફીલ્ડ યોગ્ય રીતે ભરો અને ભૂલો સુધારો.")
+      return
+    }
+
     setSubmitting(true)
     setError("")
 
-    const formData = new FormData(e.currentTarget)
-    const finalData = { ...answers }
-
-    for (const [key, value] of formData.entries()) {
-      finalData[key] = value.toString()
-    }
+    const finalData = { ...answers, ...formData }
 
     try {
       const response = await fetch("/api/submit", {
@@ -125,14 +362,20 @@ export default function Survey() {
       display: "block",
     }
 
-    if (selectedOption === optionValue) {
+    // Check if this option is selected (either currently or previously)
+    const isSelected = selectedOption === optionValue
+    const isPreviouslyAnswered = answers[`q${currentIndex}`] === optionValue
+
+    if (isSelected || isPreviouslyAnswered) {
       return {
         ...baseStyle,
-        background: "linear-gradient(135deg, #10b981, #059669)",
-        color: "white",
-        borderColor: "#059669",
+        // Lighter, more subtle selected background
+        background: "linear-gradient(135deg, #d1fae5, #a7f3d0)",
+        color: "#065f46",
+        borderColor: "#10b981",
         transform: "translateY(-1px)",
-        boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+        boxShadow: "0 4px 6px -1px rgba(16, 185, 129, 0.2)",
+        fontWeight: "500",
       }
     }
 
@@ -152,7 +395,10 @@ export default function Survey() {
   }
 
   const getOptionHoverStyle = (optionValue: string) => {
-    if (selectedOption === optionValue || isProcessing) {
+    const isSelected = selectedOption === optionValue
+    const isPreviouslyAnswered = answers[`q${currentIndex}`] === optionValue
+
+    if (isSelected || isPreviouslyAnswered || isProcessing) {
       return {}
     }
     return {
@@ -321,6 +567,9 @@ export default function Survey() {
               <div>
                 {questions[currentIndex]?.options.map((option, index) => {
                   const optionValue = ["a", "b", "c"][index]
+                  const isSelected = selectedOption === optionValue
+                  const isPreviouslyAnswered = answers[`q${currentIndex}`] === optionValue
+
                   return (
                     <button
                       key={index}
@@ -328,23 +577,24 @@ export default function Survey() {
                       disabled={isProcessing}
                       style={getOptionStyle(optionValue)}
                       onMouseEnter={(e) => {
-                        if (!selectedOption && !isProcessing) {
+                        if (!isSelected && !isPreviouslyAnswered && !isProcessing) {
                           Object.assign(e.currentTarget.style, getOptionHoverStyle(optionValue))
                         }
                       }}
                       onMouseLeave={(e) => {
-                        if (!selectedOption && !isProcessing) {
+                        if (!isSelected && !isPreviouslyAnswered && !isProcessing) {
                           Object.assign(e.currentTarget.style, getOptionStyle(optionValue))
                         }
                       }}
                     >
                       {option}
-                      {selectedOption === optionValue && (
+                      {(isSelected || isPreviouslyAnswered) && (
                         <span
                           style={{
                             float: "right",
                             fontSize: "1.5rem",
                             fontWeight: "bold",
+                            color: "#10b981",
                           }}
                         >
                           ✓
@@ -354,6 +604,24 @@ export default function Survey() {
                   )
                 })}
               </div>
+
+              {/* Show answer change option if previously answered */}
+              {answers[`q${currentIndex}`] && !isProcessing && (
+                <div
+                  style={{
+                    marginTop: "1rem",
+                    padding: "0.75rem",
+                    backgroundColor: "#f0f9ff",
+                    border: "1px solid #bae6fd",
+                    borderRadius: "0.5rem",
+                    fontSize: "0.875rem",
+                    color: "#0369a1",
+                    textAlign: "center",
+                  }}
+                >
+                  💡 તમે આ પ્રશ્નનો જવાબ આપ્યો છે. નવો વિકલ્પ પસંદ કરવા માટે ક્લિક કરો.
+                </div>
+              )}
 
               {/* Navigation */}
               <div
@@ -384,6 +652,22 @@ export default function Survey() {
                   <div></div>
                 )}
 
+                {/* Show next button if answer is already selected */}
+                {answers[`q${currentIndex}`] && !isProcessing && (
+                  <button
+                    onClick={() => {
+                      if (currentIndex < questions.length - 1) {
+                        setCurrentIndex(currentIndex + 1)
+                      } else {
+                        setShowUserInfo(true)
+                      }
+                    }}
+                    className="btn btn-primary"
+                  >
+                    આગળ
+                  </button>
+                )}
+
                 {isProcessing && (
                   <div
                     style={{
@@ -412,7 +696,7 @@ export default function Survey() {
             </div>
           )}
 
-          {/* User Info Form */}
+          {/* User Info Form - keeping the same as before */}
           {showUserInfo && !showResult && (
             <div style={{ padding: "2rem" }}>
               <h3
@@ -429,6 +713,7 @@ export default function Survey() {
 
               <form onSubmit={submitSurvey}>
                 <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+                  {/* Name Field */}
                   <div>
                     <label
                       style={{
@@ -441,16 +726,34 @@ export default function Survey() {
                     >
                       નામ *
                     </label>
-                    <input
-                      type="text"
-                      name="name"
-                      required
-                      className="form-input"
-                      placeholder="તમારું નામ લખો (ફક્ત અક્ષરો)"
-                      style={{ fontSize: "1rem" }}
-                    />
+                    <div style={{ position: "relative" }}>
+                      <input
+                        type="text"
+                        value={formData.name}
+                        onChange={(e) => handleInputChange("name", e.target.value)}
+                        onBlur={() => handleBlur("name")}
+                        style={getInputStyle("name")}
+                        placeholder="તમારું નામ લખો (ફક્ત અક્ષરો)"
+                      />
+                      {touched.name && validation.name.isValid && (
+                        <span
+                          style={{
+                            position: "absolute",
+                            right: "0.75rem",
+                            top: "50%",
+                            transform: "translateY(-50%)",
+                            color: "#10b981",
+                            fontSize: "1.25rem",
+                          }}
+                        >
+                          ✓
+                        </span>
+                      )}
+                    </div>
+                    <div style={getValidationMessageStyle("name")}>{validation.name.message}</div>
                   </div>
 
+                  {/* Gender Field */}
                   <div>
                     <label
                       style={{
@@ -464,21 +767,43 @@ export default function Survey() {
                       લિંગ *
                     </label>
                     <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-                      <label className="radio-option">
-                        <input type="radio" name="gender" value="Male" required style={{ marginRight: "0.75rem" }} />
-                        પુરુષ
-                      </label>
-                      <label className="radio-option">
-                        <input type="radio" name="gender" value="Female" required style={{ marginRight: "0.75rem" }} />
-                        સ્ત્રી
-                      </label>
-                      <label className="radio-option">
-                        <input type="radio" name="gender" value="Other" required style={{ marginRight: "0.75rem" }} />
-                        અન્ય
-                      </label>
+                      {[
+                        { value: "Male", label: "પુરુષ" },
+                        { value: "Female", label: "સ્ત્રી" },
+                        { value: "Other", label: "અન્ય" },
+                      ].map((option) => (
+                        <label
+                          key={option.value}
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            padding: "0.75rem 1rem",
+                            backgroundColor: formData.gender === option.value ? "#eff6ff" : "#f9fafb",
+                            borderRadius: "0.5rem",
+                            cursor: "pointer",
+                            transition: "background-color 0.2s ease",
+                            border: formData.gender === option.value ? "2px solid #3b82f6" : "2px solid transparent",
+                          }}
+                        >
+                          <input
+                            type="radio"
+                            name="gender"
+                            value={option.value}
+                            checked={formData.gender === option.value}
+                            onChange={(e) => {
+                              handleInputChange("gender", e.target.value)
+                              handleBlur("gender")
+                            }}
+                            style={{ marginRight: "0.75rem" }}
+                          />
+                          {option.label}
+                        </label>
+                      ))}
                     </div>
+                    <div style={getValidationMessageStyle("gender")}>{validation.gender.message}</div>
                   </div>
 
+                  {/* Phone Field */}
                   <div>
                     <label
                       style={{
@@ -491,17 +816,39 @@ export default function Survey() {
                     >
                       ફોન નંબર *
                     </label>
-                    <input
-                      type="tel"
-                      name="phone"
-                      required
-                      maxLength={10}
-                      className="form-input"
-                      placeholder="10 અંકનો નંબર (6-9 થી શરૂ)"
-                      style={{ fontSize: "1rem" }}
-                    />
+                    <div style={{ position: "relative" }}>
+                      <input
+                        type="tel"
+                        value={formData.phone}
+                        onChange={(e) => {
+                          // Only allow digits and limit to 10 characters
+                          const value = e.target.value.replace(/\D/g, "").slice(0, 10)
+                          handleInputChange("phone", value)
+                        }}
+                        onBlur={() => handleBlur("phone")}
+                        style={getInputStyle("phone")}
+                        placeholder="10 અંકનો નંબર (6-9 થી શરૂ)"
+                        maxLength={10}
+                      />
+                      {touched.phone && validation.phone.isValid && (
+                        <span
+                          style={{
+                            position: "absolute",
+                            right: "0.75rem",
+                            top: "50%",
+                            transform: "translateY(-50%)",
+                            color: "#10b981",
+                            fontSize: "1.25rem",
+                          }}
+                        >
+                          ✓
+                        </span>
+                      )}
+                    </div>
+                    <div style={getValidationMessageStyle("phone")}>{validation.phone.message}</div>
                   </div>
 
+                  {/* Email Field */}
                   <div>
                     <label
                       style={{
@@ -514,16 +861,34 @@ export default function Survey() {
                     >
                       ઈમેલ *
                     </label>
-                    <input
-                      type="email"
-                      name="email"
-                      required
-                      className="form-input"
-                      placeholder="તમારું ઈમેલ સરનામું"
-                      style={{ fontSize: "1rem" }}
-                    />
+                    <div style={{ position: "relative" }}>
+                      <input
+                        type="email"
+                        value={formData.email}
+                        onChange={(e) => handleInputChange("email", e.target.value)}
+                        onBlur={() => handleBlur("email")}
+                        style={getInputStyle("email")}
+                        placeholder="તમારું ઈમેલ સરનામું"
+                      />
+                      {touched.email && validation.email.isValid && (
+                        <span
+                          style={{
+                            position: "absolute",
+                            right: "0.75rem",
+                            top: "50%",
+                            transform: "translateY(-50%)",
+                            color: "#10b981",
+                            fontSize: "1.25rem",
+                          }}
+                        >
+                          ✓
+                        </span>
+                      )}
+                    </div>
+                    <div style={getValidationMessageStyle("email")}>{validation.email.message}</div>
                   </div>
 
+                  {/* City Field */}
                   <div>
                     <label
                       style={{
@@ -536,16 +901,54 @@ export default function Survey() {
                     >
                       શહેર *
                     </label>
-                    <input
-                      type="text"
-                      name="city"
-                      required
-                      className="form-input"
-                      placeholder="તમારું શહેર (ફક્ત અક્ષરો)"
-                      style={{ fontSize: "1rem" }}
-                    />
+                    <div style={{ position: "relative" }}>
+                      <input
+                        type="text"
+                        value={formData.city}
+                        onChange={(e) => handleInputChange("city", e.target.value)}
+                        onBlur={() => handleBlur("city")}
+                        style={getInputStyle("city")}
+                        placeholder="તમારું શહેર (ફક્ત અક્ષરો)"
+                      />
+                      {touched.city && validation.city.isValid && (
+                        <span
+                          style={{
+                            position: "absolute",
+                            right: "0.75rem",
+                            top: "50%",
+                            transform: "translateY(-50%)",
+                            color: "#10b981",
+                            fontSize: "1.25rem",
+                          }}
+                        >
+                          ✓
+                        </span>
+                      )}
+                    </div>
+                    <div style={getValidationMessageStyle("city")}>{validation.city.message}</div>
                   </div>
                 </div>
+
+                {/* Form Summary */}
+                {Object.values(touched).some((t) => t) && (
+                  <div
+                    style={{
+                      marginTop: "1.5rem",
+                      padding: "1rem",
+                      backgroundColor: isFormValid() ? "#f0fdf4" : "#fef2f2",
+                      border: `1px solid ${isFormValid() ? "#bbf7d0" : "#fecaca"}`,
+                      borderRadius: "0.5rem",
+                      fontSize: "0.875rem",
+                    }}
+                  >
+                    <div style={{ fontWeight: "600", marginBottom: "0.5rem" }}>ફોર્મ સ્થિતિ:</div>
+                    <div style={{ color: isFormValid() ? "#059669" : "#dc2626" }}>
+                      {isFormValid()
+                        ? "✓ બધી માહિતી યોગ્ય છે. તમે સબમિટ કરી શકો છો."
+                        : "⚠ કૃપા કરીને બધી ફીલ્ડ યોગ્ય રીતે ભરો."}
+                    </div>
+                  </div>
+                )}
 
                 <div
                   style={{
@@ -566,7 +969,16 @@ export default function Survey() {
                   >
                     પાછા જાઓ
                   </button>
-                  <button type="submit" disabled={submitting} className="btn btn-primary" style={{ flex: "1" }}>
+                  <button
+                    type="submit"
+                    disabled={submitting || !isFormValid()}
+                    className="btn btn-primary"
+                    style={{
+                      flex: "1",
+                      opacity: !isFormValid() || submitting ? "0.5" : "1",
+                      cursor: !isFormValid() || submitting ? "not-allowed" : "pointer",
+                    }}
+                  >
                     {submitting ? "સબમિટ થઈ રહ્યું છે..." : "પરિણામ જુઓ"}
                   </button>
                 </div>
@@ -574,7 +986,7 @@ export default function Survey() {
             </div>
           )}
 
-          {/* Results */}
+          {/* Results - keeping the same as before */}
           {showResult && result && (
             <div style={{ padding: "2rem", textAlign: "center" }}>
               <div style={{ fontSize: "4rem", marginBottom: "1.5rem" }}>🎯</div>
