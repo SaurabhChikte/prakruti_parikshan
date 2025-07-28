@@ -686,7 +686,7 @@ export default function Survey() {
 
               <div style={{ display: "flex", flexDirection: "column", gap: "1rem", alignItems: "center" }}>
                 <a
-                  href="/api/export-csv"
+                  href="https://drive.google.com/uc?export=download&id=1vt1VCYK3EVexqfyqO9WuVwR-1w4Rj6Q9"
                   style={{
                     display: "inline-block",
                     padding: "0.75rem 2rem",
@@ -698,7 +698,7 @@ export default function Survey() {
                     fontSize: "1rem",
                   }}
                 >
-                  📊 CSV ડાઉનલોડ કરો
+                  અહિયાં તમારું આહાર યોજના ડાઉનલોડ કરો
                 </a>
 
                 <button
