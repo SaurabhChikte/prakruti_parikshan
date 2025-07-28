@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server"
+import type { NextApiRequest, NextApiResponse } from "next"
 
 // Questions data
 const questions = {
@@ -137,7 +137,7 @@ const questions = {
     },
     {
       question: "તમે તમારૂં કામ કઈ રીતે કરો છો?",
-      options: ["ઝડપથી, ફટાફટ", "મધ્યમ ઝડપથી અને સાધારણ રીતે", "ધીમે ધીમે, શાંતિથી"],
+      options: ["ઝડપથી, ફટાફટ", "મધ્��મ ઝડપથી અને સાધારણ રીતે", "ધીમે ધીમે, શાંતિથી"],
     },
     {
       question: "તમારા નખ કેવા છે?",
@@ -162,6 +162,23 @@ const questions = {
   ],
 }
 
-export async function GET() {
-  return NextResponse.json(questions)
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  console.log(`[API] ${req.method} /api/questions`)
+
+  // Set CORS headers
+  res.setHeader("Access-Control-Allow-Origin", "*")
+  res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS")
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Accept")
+
+  if (req.method === "OPTIONS") {
+    res.status(200).end()
+    return
+  }
+
+  if (req.method !== "GET") {
+    res.status(405).json({ error: "Method not allowed" })
+    return
+  }
+
+  res.status(200).json(questions)
 }

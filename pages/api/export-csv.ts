@@ -1,27 +1,32 @@
-import { NextResponse } from "next/server"
+import type { NextApiRequest, NextApiResponse } from "next"
 import { createClient } from "@supabase/supabase-js"
 
 // Create Supabase client
 const supabaseUrl = process.env.SUPABASE_URL
 const supabaseKey = process.env.SUPABASE_ANON_KEY
 
-if (!supabaseUrl || !supabaseKey) {
-  console.error("Missing Supabase environment variables")
-}
-
 const supabase = createClient(supabaseUrl!, supabaseKey!)
 
-export async function GET() {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  console.log(`[API] ${req.method} /api/export-csv`)
+
+  if (req.method !== "GET") {
+    res.status(405).json({ error: "Method not allowed" })
+    return
+  }
+
   try {
     const { data, error } = await supabase.from("survey_responses").select("*").order("timestamp", { ascending: false })
 
     if (error) {
       console.error("Supabase fetch error:", error)
-      return NextResponse.json({ error: "Failed to fetch survey responses." }, { status: 500 })
+      res.status(500).json({ error: "Failed to fetch survey responses." })
+      return
     }
 
     if (!data || data.length === 0) {
-      return NextResponse.json({ message: "No survey responses found." }, { status: 404 })
+      res.status(404).json({ message: "No survey responses found." })
+      return
     }
 
     // Create CSV content manually
@@ -46,14 +51,11 @@ export async function GET() {
 
     const csvContent = csvRows.join("\n")
 
-    return new NextResponse(csvContent, {
-      headers: {
-        "Content-Type": "text/csv",
-        "Content-Disposition": 'attachment; filename="survey_responses.csv"',
-      },
-    })
+    res.setHeader("Content-Type", "text/csv")
+    res.setHeader("Content-Disposition", 'attachment; filename="survey_responses.csv"')
+    res.status(200).send(csvContent)
   } catch (error: any) {
     console.error("CSV export error:", error)
-    return NextResponse.json({ error: "Failed to generate CSV." }, { status: 500 })
+    res.status(500).json({ error: "Failed to generate CSV." })
   }
 }

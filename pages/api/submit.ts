@@ -1,41 +1,48 @@
-import { type NextRequest, NextResponse } from "next/server"
+import type { NextApiRequest, NextApiResponse } from "next"
 import { createClient } from "@supabase/supabase-js"
 
-// Create Supabase client with error handling
+// Create Supabase client
 const supabaseUrl = process.env.SUPABASE_URL
 const supabaseKey = process.env.SUPABASE_ANON_KEY
 
 console.log("Environment check:", {
   hasUrl: !!supabaseUrl,
   hasKey: !!supabaseKey,
-  url: supabaseUrl ? `${supabaseUrl.substring(0, 20)}...` : "missing",
 })
-
-if (!supabaseUrl || !supabaseKey) {
-  console.error("Missing Supabase environment variables")
-}
 
 const supabase = createClient(supabaseUrl!, supabaseKey!)
 
-export async function POST(request: NextRequest) {
-  console.log("=== POST REQUEST RECEIVED ===")
-  console.log("Method:", request.method)
-  console.log("URL:", request.url)
-  console.log("Headers:", Object.fromEntries(request.headers.entries()))
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  console.log(`[API] ${req.method} /api/submit`)
+  console.log("[API] Headers:", req.headers)
+  console.log("[API] Body:", req.body)
+
+  // Set CORS headers
+  res.setHeader("Access-Control-Allow-Origin", "*")
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Accept")
+
+  if (req.method === "OPTIONS") {
+    res.status(200).end()
+    return
+  }
+
+  if (req.method === "GET") {
+    res.status(200).json({
+      message: "Submit API is working. Use POST method to submit survey data.",
+      timestamp: new Date().toISOString(),
+    })
+    return
+  }
+
+  if (req.method !== "POST") {
+    res.status(405).json({ error: "Method not allowed" })
+    return
+  }
 
   try {
-    const body = await request.text()
-    console.log("Raw body:", body)
-
-    let formData
-    try {
-      formData = JSON.parse(body)
-    } catch (parseError) {
-      console.error("JSON parse error:", parseError)
-      return NextResponse.json({ error: "Invalid JSON format" }, { status: 400 })
-    }
-
-    console.log("Parsed form data:", formData)
+    const formData = req.body
+    console.log("Processing form data:", formData)
 
     // Manual validation
     const errors: string[] = []
@@ -68,13 +75,11 @@ export async function POST(request: NextRequest) {
 
     if (errors.length > 0) {
       console.log("Validation errors:", errors)
-      return NextResponse.json(
-        {
-          error: "Validation failed",
-          details: errors,
-        },
-        { status: 400 },
-      )
+      res.status(400).json({
+        error: "Validation failed",
+        details: errors,
+      })
+      return
     }
 
     // Count a/b/c options
@@ -136,7 +141,8 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       console.error("Supabase insert error:", error)
-      return NextResponse.json({ error: "પરિણામ સાચવવામાં સમસ્યા આવી. કૃપા કરીને ફરીથી પ્રયાસ કરો." }, { status: 500 })
+      res.status(500).json({ error: "પરિણામ સાચવવામાં સમસ્યા આવી. કૃપા કરીને ફરીથી પ્રયાસ કરો." })
+      return
     }
 
     console.log("Supabase insert successful:", data)
@@ -148,44 +154,13 @@ export async function POST(request: NextRequest) {
     }
 
     console.log("Sending response:", response)
-
-    return NextResponse.json(response, {
-      status: 200,
-      headers: {
-        "Content-Type": "application/json",
-      },
-    })
+    res.status(200).json(response)
   } catch (error: any) {
     console.error("API submit error:", error)
     console.error("Error stack:", error.stack)
-    return NextResponse.json(
-      {
-        error: "કંઈક ખોટું થયું છે. કૃપા કરીને ફરીથી પ્રયાસ કરો.",
-        details: error.message,
-      },
-      { status: 500 },
-    )
+    res.status(500).json({
+      error: "કંઈક ખોટું થયું છે. કૃપા કરીને ફરીથી પ્રયાસ કરો.",
+      details: error.message,
+    })
   }
-}
-
-// Add GET method for debugging
-export async function GET(request: NextRequest) {
-  console.log("GET request received at /api/submit")
-  return NextResponse.json({
-    message: "Submit API is working. Use POST method to submit survey data.",
-    timestamp: new Date().toISOString(),
-  })
-}
-
-// Add OPTIONS method to handle CORS preflight requests
-export async function OPTIONS(request: NextRequest) {
-  console.log("OPTIONS request received at /api/submit")
-  return new NextResponse(null, {
-    status: 200,
-    headers: {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type, Accept",
-    },
-  })
 }
