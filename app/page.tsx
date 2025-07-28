@@ -1,5 +1,22 @@
-// This file can be empty or contain a redirect if you want to serve index.html from a different route.
-// For this setup, public/index.html will be served directly as the root.
+"use client"
+
+import { useEffect } from "react"
+import { useRouter } from "next/navigation"
+
 export default function HomePage() {
-  return null
+  const router = useRouter()
+
+  useEffect(() => {
+    // Redirect to the survey page
+    window.location.href = "/survey"
+  }, [])
+
+  return (
+    <div className="flex items-center justify-center min-h-screen">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
+        <p className="mt-4 text-lg">લોડ થઈ રહ્યું છે...</p>
+      </div>
+    </div>
+  )
 }

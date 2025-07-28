@@ -1,11 +1,24 @@
-import { NextResponse } from "next/server"
-import { supabase } from "../../../lib/supabase"
+import { type NextRequest, NextResponse } from "next/server"
+import { createClient } from "@supabase/supabase-js"
 
-export async function POST(req: Request) {
+// Create Supabase client with error handling
+const supabaseUrl = process.env.SUPABASE_URL
+const supabaseKey = process.env.SUPABASE_ANON_KEY
+
+if (!supabaseUrl || !supabaseKey) {
+  console.error("Missing Supabase environment variables")
+}
+
+const supabase = createClient(supabaseUrl!, supabaseKey!)
+
+export async function POST(request: NextRequest) {
+  console.log("Received POST request to /api/submit")
+
   try {
-    const formData = await req.json()
+    const formData = await request.json()
+    console.log("Request body:", formData)
 
-    // Manual validation (adapted from express-validator logic)
+    // Manual validation
     const errors: string[] = []
 
     const validateField = (value: string, regex: RegExp, minLength: number, errorMessage: string) => {
@@ -35,6 +48,7 @@ export async function POST(req: Request) {
     }
 
     if (errors.length > 0) {
+      console.log("Validation errors:", errors)
       return NextResponse.json(
         {
           error: "Validation failed",
@@ -82,26 +96,29 @@ export async function POST(req: Request) {
       resultDescription = `તમારું સ્વાસ્થ્ય ${counts[0][0]} અને ${counts[1][0]} પ્રકૃતિનું મિશ્રણ છે.`
     }
 
+    const recordToInsert = {
+      timestamp: new Date().toISOString(),
+      name: formData.name,
+      gender: formData.gender,
+      phone: formData.phone,
+      email: formData.email,
+      city: formData.city,
+      scores: `વાત: ${aCount}, પિત્ત: ${bCount}, કફ: ${cCount}`,
+      result: surveyResult,
+      description: resultDescription,
+    }
+
+    console.log("Attempting to insert into Supabase:", recordToInsert)
+
     // Save to Supabase
-    const { data, error } = await supabase.from("survey_responses").insert([
-      {
-        timestamp: new Date().toISOString(),
-        name: formData.name,
-        gender: formData.gender,
-        phone: formData.phone,
-        email: formData.email,
-        city: formData.city,
-        scores: `વાત: ${aCount}, પિત્ત: ${bCount}, કફ: ${cCount}`,
-        result: surveyResult,
-        description: resultDescription,
-      },
-    ])
+    const { data, error } = await supabase.from("survey_responses").insert([recordToInsert]).select()
 
     if (error) {
       console.error("Supabase insert error:", error)
       return NextResponse.json({ error: "પરિણામ સાચવવામાં સમસ્યા આવી. કૃપા કરીને ફરીથી પ્રયાસ કરો." }, { status: 500 })
     }
 
+    console.log("Supabase insert successful:", data)
     return NextResponse.json({
       result: surveyResult,
       description: resultDescription,
@@ -111,4 +128,16 @@ export async function POST(req: Request) {
     console.error("API submit error:", error)
     return NextResponse.json({ error: "કંઈક ખોટું થયું છે. કૃપા કરીને ફરીથી પ્રયાસ કરો." }, { status: 500 })
   }
+}
+
+// Add OPTIONS method to handle CORS preflight requests
+export async function OPTIONS(request: NextRequest) {
+  return new NextResponse(null, {
+    status: 200,
+    headers: {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type",
+    },
+  })
 }

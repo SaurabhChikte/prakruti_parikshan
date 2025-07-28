@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 
-// Questions data (moved from server.js)
+// Questions data
 const questions = {
   questions: [
     {

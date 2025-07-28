@@ -9,7 +9,6 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="mobile-web-app-capable" content="yes" />
-  <!-- Remove all CSP that might force HTTPS -->
   <title>પ્રકૃતિ પરીક્ષણ- Children's Research University</title>
   <style>
 * {
@@ -253,7 +252,6 @@ overflow-y: auto;
 padding: 20px;
 width: 100%;
 height: 100%;
-/* margin-bottom: 60px; */
 }
 
 .user-info.active {
@@ -508,7 +506,6 @@ margin-top: 15px;
 padding: 16px 32px;
 }
 
-
 /* Mobile-specific optimizations */
 @media (max-width: 768px) {
 .header {
@@ -562,7 +559,6 @@ width: 100%;
 align-self: center;
 border-style: ridge;
 }
-
 }
 
 /* Extra small screens */
@@ -596,7 +592,6 @@ border-style: ridge;
   align-self: center;
   border-style: ridge;
 }
-
 }
 
 /* Landscape mobile optimization */
@@ -831,8 +826,6 @@ background: #a8a8a8;
     </div>
   </div>
   <script>
-    console.log("AyurvedicSurvey script started."); // Add this line
-
     class AyurvedicSurvey {
       constructor() {
         this.questions = []
@@ -889,45 +882,25 @@ background: #a8a8a8;
 
       async loadQuestions() {
         try {
-          // Use relative URL to avoid protocol issues
-          const apiUrl = '/api/questions';
-          
-          //console.log('Making request to:', apiUrl);
-          // console.log('Current location:', {
-          //   protocol: window.location.protocol,
-          //   hostname: window.location.hostname,
-          //   port: window.location.port,
-          //   origin: window.location.origin
-          // });
-          
-          const response = await fetch(apiUrl, {
+          const response = await fetch('/api/questions', {
             method: 'GET',
             headers: {
               'Content-Type': 'application/json',
               'Accept': 'application/json',
-              'X-Requested-With': 'XMLHttpRequest'
             },
-            credentials: 'same-origin'
           });
-          
-          //console.log('Response status:', response.status);
-          //console.log('Response headers:', [...response.headers.entries()]);
           
           if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status} - ${response.statusText}`);
           }
           
           const data = await response.json();
-          //console.log('Questions loaded successfully:', data.questions.length);
           
           this.questions = data.questions;
           this.totalQuestions = this.questions.length;
           this.loading.classList.remove('active');
           this.showQuestion();
         } catch (error) {
-          //console.error('Detailed error:', error);
-          //console.error('Error type:', error.constructor.name);
-          //console.error('Error message:', error.message);
           this.showError(`પ્રશ્નો લોડ કરવામાં સમસ્યા આવી: ${error.message}. કૃપા કરીને પેજ રિફ્રેશ કરો.`);
         }
       }
@@ -1206,38 +1179,29 @@ background: #a8a8a8;
         this.showLoading();
         
         try {
-          // Use relative URL for submit as well
-          const apiUrl = '/api/submit';
-          
-          //console.log('Submitting to:', apiUrl);
-          //console.log('Data being sent:', finalData);
-          
-          const response = await fetch(apiUrl, {
+          const response = await fetch('/api/submit', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
               'Accept': 'application/json',
-              'X-Requested-With': 'XMLHttpRequest'
             },
-            credentials: 'same-origin',
             body: JSON.stringify(finalData),
           });
           
-          //console.log('Submit response status:', response.status);
-          //console.log('Submit response headers:', [...response.headers.entries()]);
+          if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`HTTP ${response.status}: ${errorText}`);
+          }
           
           const result = await response.json();
-          //console.log('Submit result:', result);
           
-          if (!response.ok || result.error) {
-            this.showError(result.error || 'પરિણામ સાચવવામાં સમસ્યા આવી. કૃપા કરીને ફરીથી પ્રયાસ કરો.');
+          if (result.error) {
+            this.showError(result.error);
           } else {
             this.showResult(result);
           }
         } catch (error) {
-          //console.error('Detailed submission error:', error);
-          //console.error('Error type:', error.constructor.name);
-          //console.error('Error message:', error.message);
+          console.error('Submission error:', error);
           this.showError(`પરિણામ સાચવવામાં સમસ્યા આવી: ${error.message}. કૃપા કરીને ફરીથી પ્રયાસ કરો.`);
         }
       }

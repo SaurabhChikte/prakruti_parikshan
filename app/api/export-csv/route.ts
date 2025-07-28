@@ -1,6 +1,15 @@
 import { NextResponse } from "next/server"
-import { supabase } from "../../../lib/supabase"
-import { createObjectCsvStringifier } from "csv-writer"
+import { createClient } from "@supabase/supabase-js"
+
+// Create Supabase client
+const supabaseUrl = process.env.SUPABASE_URL
+const supabaseKey = process.env.SUPABASE_ANON_KEY
+
+if (!supabaseUrl || !supabaseKey) {
+  console.error("Missing Supabase environment variables")
+}
+
+const supabase = createClient(supabaseUrl!, supabaseKey!)
 
 export async function GET() {
   try {
@@ -15,23 +24,27 @@ export async function GET() {
       return NextResponse.json({ message: "No survey responses found." }, { status: 404 })
     }
 
-    const csvStringifier = createObjectCsvStringifier({
-      header: [
-        { id: "timestamp", title: "Timestamp" },
-        { id: "name", title: "Name" },
-        { id: "gender", title: "Gender" },
-        { id: "phone", title: "Phone" },
-        { id: "email", title: "Email" },
-        { id: "city", title: "City" },
-        { id: "scores", title: "Scores" },
-        { id: "result", title: "Result" },
-        { id: "description", title: "Description" },
-      ],
-    })
+    // Create CSV content manually
+    const headers = ["Timestamp", "Name", "Gender", "Phone", "Email", "City", "Scores", "Result", "Description"]
 
-    const csvHeader = csvStringifier.getHeaderString()
-    const csvRecords = csvStringifier.stringifyRecords(data)
-    const csvContent = csvHeader + csvRecords
+    const csvRows = [
+      headers.join(","),
+      ...data.map((row) =>
+        [
+          row.timestamp,
+          `"${row.name}"`,
+          row.gender,
+          row.phone,
+          `"${row.email}"`,
+          `"${row.city}"`,
+          `"${row.scores}"`,
+          `"${row.result}"`,
+          `"${row.description}"`,
+        ].join(","),
+      ),
+    ]
+
+    const csvContent = csvRows.join("\n")
 
     return new NextResponse(csvContent, {
       headers: {
