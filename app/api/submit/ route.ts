@@ -5,6 +5,12 @@ import { createClient } from "@supabase/supabase-js"
 const supabaseUrl = process.env.SUPABASE_URL
 const supabaseKey = process.env.SUPABASE_ANON_KEY
 
+console.log("Environment check:", {
+  hasUrl: !!supabaseUrl,
+  hasKey: !!supabaseKey,
+  url: supabaseUrl ? `${supabaseUrl.substring(0, 20)}...` : "missing",
+})
+
 if (!supabaseUrl || !supabaseKey) {
   console.error("Missing Supabase environment variables")
 }
@@ -12,11 +18,24 @@ if (!supabaseUrl || !supabaseKey) {
 const supabase = createClient(supabaseUrl!, supabaseKey!)
 
 export async function POST(request: NextRequest) {
-  console.log("Received POST request to /api/submit")
+  console.log("=== POST REQUEST RECEIVED ===")
+  console.log("Method:", request.method)
+  console.log("URL:", request.url)
+  console.log("Headers:", Object.fromEntries(request.headers.entries()))
 
   try {
-    const formData = await request.json()
-    console.log("Request body:", formData)
+    const body = await request.text()
+    console.log("Raw body:", body)
+
+    let formData
+    try {
+      formData = JSON.parse(body)
+    } catch (parseError) {
+      console.error("JSON parse error:", parseError)
+      return NextResponse.json({ error: "Invalid JSON format" }, { status: 400 })
+    }
+
+    console.log("Parsed form data:", formData)
 
     // Manual validation
     const errors: string[] = []
@@ -72,6 +91,8 @@ export async function POST(request: NextRequest) {
       }
     })
 
+    console.log("Answer counts:", { aCount, bCount, cCount })
+
     // Calculate result
     let surveyResult = ""
     let resultDescription = ""
@@ -119,25 +140,52 @@ export async function POST(request: NextRequest) {
     }
 
     console.log("Supabase insert successful:", data)
-    return NextResponse.json({
+
+    const response = {
       result: surveyResult,
       description: resultDescription,
       counts: { vata: aCount, pitta: bCount, kapha: cCount },
+    }
+
+    console.log("Sending response:", response)
+
+    return NextResponse.json(response, {
+      status: 200,
+      headers: {
+        "Content-Type": "application/json",
+      },
     })
   } catch (error: any) {
     console.error("API submit error:", error)
-    return NextResponse.json({ error: "કંઈક ખોટું થયું છે. કૃપા કરીને ફરીથી પ્રયાસ કરો." }, { status: 500 })
+    console.error("Error stack:", error.stack)
+    return NextResponse.json(
+      {
+        error: "કંઈક ખોટું થયું છે. કૃપા કરીને ફરીથી પ્રયાસ કરો.",
+        details: error.message,
+      },
+      { status: 500 },
+    )
   }
+}
+
+// Add GET method for debugging
+export async function GET(request: NextRequest) {
+  console.log("GET request received at /api/submit")
+  return NextResponse.json({
+    message: "Submit API is working. Use POST method to submit survey data.",
+    timestamp: new Date().toISOString(),
+  })
 }
 
 // Add OPTIONS method to handle CORS preflight requests
 export async function OPTIONS(request: NextRequest) {
+  console.log("OPTIONS request received at /api/submit")
   return new NextResponse(null, {
     status: 200,
     headers: {
       "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "POST, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type",
+      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type, Accept",
     },
   })
 }

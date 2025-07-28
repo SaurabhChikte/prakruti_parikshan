@@ -1176,9 +1176,30 @@ background: #a8a8a8;
           finalData[key] = value;
         }
         
+        console.log('Submitting data:', finalData);
+        
         this.showLoading();
         
         try {
+          // First test if the API is reachable
+          console.log('Testing API connectivity...');
+          const testResponse = await fetch('/api/test', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+            },
+            body: JSON.stringify({ test: 'connectivity' }),
+          });
+          
+          console.log('Test response status:', testResponse.status);
+          
+          if (!testResponse.ok) {
+            throw new Error(`API test failed: ${testResponse.status}`);
+          }
+          
+          // Now submit the actual survey
+          console.log('Submitting survey data...');
           const response = await fetch('/api/submit', {
             method: 'POST',
             headers: {
@@ -1188,12 +1209,17 @@ background: #a8a8a8;
             body: JSON.stringify(finalData),
           });
           
+          console.log('Submit response status:', response.status);
+          console.log('Submit response headers:', [...response.headers.entries()]);
+          
           if (!response.ok) {
             const errorText = await response.text();
+            console.error('Error response text:', errorText);
             throw new Error(`HTTP ${response.status}: ${errorText}`);
           }
           
           const result = await response.json();
+          console.log('Submit result:', result);
           
           if (result.error) {
             this.showError(result.error);
@@ -1201,8 +1227,18 @@ background: #a8a8a8;
             this.showResult(result);
           }
         } catch (error) {
-          console.error('Submission error:', error);
-          this.showError(`પરિણામ સાચવવામાં સમસ્યા આવી: ${error.message}. કૃપા કરીને ફરીથી પ્રયાસ કરો.`);
+          console.error('Detailed submission error:', error);
+          console.error('Error type:', error.constructor.name);
+          console.error('Error message:', error.message);
+          
+          // More specific error messages
+          if (error.message.includes('405')) {
+            this.showError('API રૂટ કામ કરતું નથી. કૃપા કરીને વેબસાઇટ રિફ્રેશ કરો અને ફરીથી પ્રયાસ કરો.');
+          } else if (error.message.includes('Failed to fetch')) {
+            this.showError('ઇન્ટરનેટ કનેક્શન તપાસો અને ફરીથી પ્રયાસ કરો.');
+          } else {
+            this.showError(`પરિણામ સાચવવામાં સમસ્યા આવી: ${error.message}. કૃપા કરીને ફરીથી પ્રયાસ કરો.`);
+          }
         }
       }
 
