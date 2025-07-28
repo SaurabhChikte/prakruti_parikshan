@@ -5,13 +5,18 @@ import { createClient } from "@supabase/supabase-js"
 const supabaseUrl = process.env.SUPABASE_URL
 const supabaseKey = process.env.SUPABASE_ANON_KEY
 
-const supabase = createClient(supabaseUrl!, supabaseKey!)
+const supabase = supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabaseKey) : null
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   console.log(`[API] ${req.method} /api/export-csv`)
 
   if (req.method !== "GET") {
     res.status(405).json({ error: "Method not allowed" })
+    return
+  }
+
+  if (!supabase) {
+    res.status(500).json({ error: "Database configuration error" })
     return
   }
 

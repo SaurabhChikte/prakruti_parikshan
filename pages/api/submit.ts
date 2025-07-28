@@ -5,17 +5,14 @@ import { createClient } from "@supabase/supabase-js"
 const supabaseUrl = process.env.SUPABASE_URL
 const supabaseKey = process.env.SUPABASE_ANON_KEY
 
-console.log("Environment check:", {
-  hasUrl: !!supabaseUrl,
-  hasKey: !!supabaseKey,
-})
+if (!supabaseUrl || !supabaseKey) {
+  console.error("Missing Supabase environment variables")
+}
 
-const supabase = createClient(supabaseUrl!, supabaseKey!)
+const supabase = supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabaseKey) : null
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   console.log(`[API] ${req.method} /api/submit`)
-  console.log("[API] Headers:", req.headers)
-  console.log("[API] Body:", req.body)
 
   // Set CORS headers
   res.setHeader("Access-Control-Allow-Origin", "*")
@@ -37,6 +34,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   if (req.method !== "POST") {
     res.status(405).json({ error: "Method not allowed" })
+    return
+  }
+
+  if (!supabase) {
+    res.status(500).json({ error: "Database configuration error" })
     return
   }
 
@@ -157,7 +159,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     res.status(200).json(response)
   } catch (error: any) {
     console.error("API submit error:", error)
-    console.error("Error stack:", error.stack)
     res.status(500).json({
       error: "કંઈક ખોટું થયું છે. કૃપા કરીને ફરીથી પ્રયાસ કરો.",
       details: error.message,

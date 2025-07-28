@@ -1,8 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  experimental: {
-    appDir: false, // Use pages directory for API routes
-  },
+  reactStrictMode: true,
   eslint: {
     ignoreDuringBuilds: true,
   },
@@ -11,14 +9,6 @@ const nextConfig = {
   },
   images: {
     unoptimized: true,
-  },
-  async rewrites() {
-    return [
-      {
-        source: "/survey",
-        destination: "/survey/index.html",
-      },
-    ]
   },
 }
 
