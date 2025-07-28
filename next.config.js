@@ -10,6 +10,7 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
+  // Remove the rewrites since we're using App Router now
 }
 
 module.exports = nextConfig
