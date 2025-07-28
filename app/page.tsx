@@ -17,6 +17,8 @@ export default function Survey() {
   const [questions, setQuestions] = useState<Question[]>([])
   const [currentIndex, setCurrentIndex] = useState(0)
   const [answers, setAnswers] = useState<Record<string, string>>({})
+  const [selectedOption, setSelectedOption] = useState<string | null>(null)
+  const [isProcessing, setIsProcessing] = useState(false)
   const [showUserInfo, setShowUserInfo] = useState(false)
   const [showResult, setShowResult] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -27,6 +29,12 @@ export default function Survey() {
   useEffect(() => {
     loadQuestions()
   }, [])
+
+  // Reset selected option when question changes
+  useEffect(() => {
+    setSelectedOption(null)
+    setIsProcessing(false)
+  }, [currentIndex])
 
   const loadQuestions = async () => {
     try {
@@ -45,16 +53,24 @@ export default function Survey() {
   }
 
   const handleAnswer = (value: string) => {
+    if (isProcessing) return // Prevent multiple clicks
+
+    setIsProcessing(true)
+    setSelectedOption(value)
+
+    // Save the answer
     const newAnswers = { ...answers, [`q${currentIndex}`]: value }
     setAnswers(newAnswers)
 
+    // Wait 1 second then move to next question
     setTimeout(() => {
       if (currentIndex < questions.length - 1) {
         setCurrentIndex(currentIndex + 1)
       } else {
         setShowUserInfo(true)
       }
-    }, 500)
+      setIsProcessing(false)
+    }, 1000)
   }
 
   const submitSurvey = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -91,6 +107,59 @@ export default function Survey() {
       setError(error.message || "પરિણામ સાચવવામાં સમસ્યા આવી. કૃપા કરીને ફરીથી પ્રયાસ કરો.")
     } finally {
       setSubmitting(false)
+    }
+  }
+
+  const getOptionStyle = (optionValue: string) => {
+    const baseStyle = {
+      width: "100%",
+      padding: "1rem 1.5rem",
+      textAlign: "left" as const,
+      border: "2px solid #e5e7eb",
+      borderRadius: "0.75rem",
+      cursor: isProcessing ? "not-allowed" : "pointer",
+      transition: "all 0.2s ease",
+      fontSize: "1rem",
+      lineHeight: "1.5",
+      marginBottom: "0.75rem",
+      display: "block",
+    }
+
+    if (selectedOption === optionValue) {
+      return {
+        ...baseStyle,
+        background: "linear-gradient(135deg, #10b981, #059669)",
+        color: "white",
+        borderColor: "#059669",
+        transform: "translateY(-1px)",
+        boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+      }
+    }
+
+    if (isProcessing) {
+      return {
+        ...baseStyle,
+        backgroundColor: "#f9fafb",
+        opacity: "0.6",
+        cursor: "not-allowed",
+      }
+    }
+
+    return {
+      ...baseStyle,
+      backgroundColor: "#f9fafb",
+    }
+  }
+
+  const getOptionHoverStyle = (optionValue: string) => {
+    if (selectedOption === optionValue || isProcessing) {
+      return {}
+    }
+    return {
+      backgroundColor: "#eff6ff",
+      borderColor: "#3b82f6",
+      transform: "translateY(-1px)",
+      boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
     }
   }
 
@@ -250,11 +319,40 @@ export default function Survey() {
               </h3>
 
               <div>
-                {questions[currentIndex]?.options.map((option, index) => (
-                  <button key={index} onClick={() => handleAnswer(["a", "b", "c"][index])} className="option-button">
-                    {option}
-                  </button>
-                ))}
+                {questions[currentIndex]?.options.map((option, index) => {
+                  const optionValue = ["a", "b", "c"][index]
+                  return (
+                    <button
+                      key={index}
+                      onClick={() => handleAnswer(optionValue)}
+                      disabled={isProcessing}
+                      style={getOptionStyle(optionValue)}
+                      onMouseEnter={(e) => {
+                        if (!selectedOption && !isProcessing) {
+                          Object.assign(e.currentTarget.style, getOptionHoverStyle(optionValue))
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!selectedOption && !isProcessing) {
+                          Object.assign(e.currentTarget.style, getOptionStyle(optionValue))
+                        }
+                      }}
+                    >
+                      {option}
+                      {selectedOption === optionValue && (
+                        <span
+                          style={{
+                            float: "right",
+                            fontSize: "1.5rem",
+                            fontWeight: "bold",
+                          }}
+                        >
+                          ✓
+                        </span>
+                      )}
+                    </button>
+                  )
+                })}
               </div>
 
               {/* Navigation */}
@@ -263,14 +361,52 @@ export default function Survey() {
                   marginTop: "2rem",
                   display: "flex",
                   justifyContent: "space-between",
+                  alignItems: "center",
                 }}
               >
                 {currentIndex > 0 ? (
-                  <button onClick={() => setCurrentIndex(currentIndex - 1)} className="btn btn-secondary">
+                  <button
+                    onClick={() => {
+                      if (!isProcessing) {
+                        setCurrentIndex(currentIndex - 1)
+                      }
+                    }}
+                    disabled={isProcessing}
+                    className="btn btn-secondary"
+                    style={{
+                      opacity: isProcessing ? "0.5" : "1",
+                      cursor: isProcessing ? "not-allowed" : "pointer",
+                    }}
+                  >
                     પાછળ
                   </button>
                 ) : (
                   <div></div>
+                )}
+
+                {isProcessing && (
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      color: "#10b981",
+                      fontSize: "0.875rem",
+                      fontWeight: "600",
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: "1rem",
+                        height: "1rem",
+                        border: "2px solid #10b981",
+                        borderTop: "2px solid transparent",
+                        borderRadius: "50%",
+                        animation: "spin 1s linear infinite",
+                        marginRight: "0.5rem",
+                      }}
+                    ></div>
+                    આગળ વધી રહ્યા છીએ...
+                  </div>
                 )}
               </div>
             </div>
