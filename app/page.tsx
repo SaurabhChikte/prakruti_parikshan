@@ -96,10 +96,18 @@ export default function Survey() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-pink-100 to-purple-100">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-lg">પ્રશ્નો લોડ થઈ રહ્યા છે...</p>
+      <div className="survey-container">
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            minHeight: "100vh",
+            flexDirection: "column",
+          }}
+        >
+          <div className="loading-spinner" style={{ marginBottom: "1rem" }}></div>
+          <p style={{ fontSize: "1.125rem", color: "#6b7280" }}>પ્રશ્નો લોડ થઈ રહ્યા છે...</p>
         </div>
       </div>
     )
@@ -107,14 +115,39 @@ export default function Survey() {
 
   if (error && !showUserInfo && !showResult) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-pink-100 to-purple-100">
-        <div className="text-center">
-          <div className="bg-red-100 border border-red-400 text-red-700 px-6 py-4 rounded-lg max-w-md">
-            <p className="font-semibold">ભૂલ</p>
-            <p className="mt-2">{error}</p>
+      <div className="survey-container">
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            minHeight: "100vh",
+            padding: "1rem",
+          }}
+        >
+          <div
+            style={{
+              backgroundColor: "#fef2f2",
+              border: "1px solid #fecaca",
+              color: "#dc2626",
+              padding: "1.5rem",
+              borderRadius: "0.5rem",
+              maxWidth: "28rem",
+              textAlign: "center",
+            }}
+          >
+            <p style={{ fontWeight: "600", marginBottom: "0.5rem" }}>ભૂલ</p>
+            <p style={{ marginBottom: "1rem" }}>{error}</p>
             <button
               onClick={() => window.location.reload()}
-              className="mt-4 bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition-colors"
+              style={{
+                backgroundColor: "#dc2626",
+                color: "white",
+                padding: "0.5rem 1rem",
+                borderRadius: "0.25rem",
+                border: "none",
+                cursor: "pointer",
+              }}
             >
               ફરીથી પ્રયાસ કરો
             </button>
@@ -125,170 +158,279 @@ export default function Survey() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-pink-100 to-purple-100">
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-lg overflow-hidden">
+    <div className="survey-container">
+      <div
+        style={{
+          maxWidth: "42rem",
+          margin: "0 auto",
+          padding: "2rem 1rem",
+        }}
+      >
+        <div className="survey-card">
           {/* Header */}
-          <div className="bg-gradient-to-r from-pink-400 to-purple-400 text-white p-6 text-center">
-            <div className="mb-4">
+          <div className="survey-header">
+            <div style={{ marginBottom: "1rem" }}>
               <img
                 src="https://www.cugujarat.ac.in/assets/images/logo.png"
                 alt="University Logo"
-                className="h-16 w-auto mx-auto"
+                style={{
+                  height: "4rem",
+                  width: "auto",
+                  margin: "0 auto",
+                  display: "block",
+                }}
               />
             </div>
-            <h1 className="text-2xl font-bold">પ્રકૃતિ પરીક્ષણ</h1>
-            <p className="mt-2 opacity-90">Children's Research University</p>
+            <h1
+              style={{
+                fontSize: "2rem",
+                fontWeight: "700",
+                marginBottom: "0.5rem",
+              }}
+            >
+              પ્રકૃતિ પરીક્ષણ
+            </h1>
+            <p style={{ opacity: "0.9", fontSize: "1.125rem" }}>Children's Research University</p>
           </div>
 
           {/* Progress Bar */}
           {!showResult && (
-            <div className="bg-gray-50 p-4">
-              <div className="bg-gray-200 rounded-full h-2 mb-2">
+            <div className="progress-container">
+              <div className="progress-bar">
                 <div
-                  className="bg-blue-600 h-2 rounded-full transition-all duration-300 progress-bar"
+                  className="progress-fill"
                   style={{
                     width: showUserInfo ? "100%" : `${((currentIndex + 1) / questions.length) * 100}%`,
                   }}
                 ></div>
               </div>
-              <p className="text-center text-sm text-gray-600">
+              <p
+                style={{
+                  textAlign: "center",
+                  fontSize: "0.875rem",
+                  color: "#6b7280",
+                  fontWeight: "600",
+                }}
+              >
                 {showUserInfo ? "વ્યક્તિગત માહિતી" : `પ્રશ્ન ${currentIndex + 1} / ${questions.length}`}
               </p>
             </div>
           )}
 
           {/* Error Message */}
-          {error && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 m-4 rounded">{error}</div>}
+          {error && (
+            <div
+              style={{
+                backgroundColor: "#fef2f2",
+                border: "1px solid #fecaca",
+                color: "#dc2626",
+                padding: "1rem",
+                margin: "1rem",
+                borderRadius: "0.5rem",
+              }}
+            >
+              {error}
+            </div>
+          )}
 
           {/* Questions */}
           {!showUserInfo && !showResult && questions.length > 0 && (
-            <div className="p-6">
-              <div className="question-card">
-                <h3 className="text-lg font-semibold mb-6 text-center">
-                  {currentIndex + 1}. {questions[currentIndex]?.question}
-                </h3>
+            <div className="question-card">
+              <h3
+                style={{
+                  fontSize: "1.25rem",
+                  fontWeight: "600",
+                  marginBottom: "2rem",
+                  textAlign: "center",
+                  lineHeight: "1.6",
+                  color: "#1f2937",
+                }}
+              >
+                {currentIndex + 1}. {questions[currentIndex]?.question}
+              </h3>
 
-                <div className="space-y-3">
-                  {questions[currentIndex]?.options.map((option, index) => (
-                    <button
-                      key={index}
-                      onClick={() => handleAnswer(["a", "b", "c"][index])}
-                      className="w-full p-4 text-left bg-gray-50 hover:bg-blue-50 border border-gray-200 rounded-lg transition-all duration-200 option-button hover:border-blue-300"
-                    >
-                      {option}
-                    </button>
-                  ))}
-                </div>
+              <div>
+                {questions[currentIndex]?.options.map((option, index) => (
+                  <button key={index} onClick={() => handleAnswer(["a", "b", "c"][index])} className="option-button">
+                    {option}
+                  </button>
+                ))}
+              </div>
 
-                {/* Navigation */}
-                <div className="mt-6 flex justify-between">
-                  {currentIndex > 0 ? (
-                    <button
-                      onClick={() => setCurrentIndex(currentIndex - 1)}
-                      className="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
-                    >
-                      પાછળ
-                    </button>
-                  ) : (
-                    <div></div>
-                  )}
-                </div>
+              {/* Navigation */}
+              <div
+                style={{
+                  marginTop: "2rem",
+                  display: "flex",
+                  justifyContent: "space-between",
+                }}
+              >
+                {currentIndex > 0 ? (
+                  <button onClick={() => setCurrentIndex(currentIndex - 1)} className="btn btn-secondary">
+                    પાછળ
+                  </button>
+                ) : (
+                  <div></div>
+                )}
               </div>
             </div>
           )}
 
           {/* User Info Form */}
           {showUserInfo && !showResult && (
-            <div className="p-6">
-              <h3 className="text-xl font-semibold mb-6 text-center">📝 વ્યક્તિગત માહિતી</h3>
+            <div style={{ padding: "2rem" }}>
+              <h3
+                style={{
+                  fontSize: "1.5rem",
+                  fontWeight: "600",
+                  marginBottom: "2rem",
+                  textAlign: "center",
+                  color: "#1f2937",
+                }}
+              >
+                📝 વ્યક્તિગત માહિતી
+              </h3>
 
               <form onSubmit={submitSurvey}>
-                <div className="space-y-4">
+                <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
                   <div>
-                    <label className="block text-sm font-medium mb-2">નામ *</label>
+                    <label
+                      style={{
+                        display: "block",
+                        fontSize: "0.875rem",
+                        fontWeight: "500",
+                        marginBottom: "0.5rem",
+                        color: "#374151",
+                      }}
+                    >
+                      નામ *
+                    </label>
                     <input
                       type="text"
                       name="name"
                       required
-                      pattern="[a-zA-Zઅ-હ\s]+"
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="form-input"
                       placeholder="તમારું નામ લખો (ફક્ત અક્ષરો)"
+                      style={{ fontSize: "1rem" }}
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-2">લિંગ *</label>
-                    <div className="space-y-2">
-                      <label className="flex items-center p-2 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100">
-                        <input type="radio" name="gender" value="Male" required className="mr-3" />
+                    <label
+                      style={{
+                        display: "block",
+                        fontSize: "0.875rem",
+                        fontWeight: "500",
+                        marginBottom: "0.5rem",
+                        color: "#374151",
+                      }}
+                    >
+                      લિંગ *
+                    </label>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                      <label className="radio-option">
+                        <input type="radio" name="gender" value="Male" required style={{ marginRight: "0.75rem" }} />
                         પુરુષ
                       </label>
-                      <label className="flex items-center p-2 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100">
-                        <input type="radio" name="gender" value="Female" required className="mr-3" />
+                      <label className="radio-option">
+                        <input type="radio" name="gender" value="Female" required style={{ marginRight: "0.75rem" }} />
                         સ્ત્રી
                       </label>
-                      <label className="flex items-center p-2 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100">
-                        <input type="radio" name="gender" value="Other" required className="mr-3" />
+                      <label className="radio-option">
+                        <input type="radio" name="gender" value="Other" required style={{ marginRight: "0.75rem" }} />
                         અન્ય
                       </label>
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-2">ફોન નંબર *</label>
+                    <label
+                      style={{
+                        display: "block",
+                        fontSize: "0.875rem",
+                        fontWeight: "500",
+                        marginBottom: "0.5rem",
+                        color: "#374151",
+                      }}
+                    >
+                      ફોન નંબર *
+                    </label>
                     <input
                       type="tel"
                       name="phone"
                       required
-                      pattern="[6-9][0-9]{9}"
                       maxLength={10}
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="form-input"
                       placeholder="10 અંકનો નંબર (6-9 થી શરૂ)"
+                      style={{ fontSize: "1rem" }}
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-2">ઈમેલ *</label>
+                    <label
+                      style={{
+                        display: "block",
+                        fontSize: "0.875rem",
+                        fontWeight: "500",
+                        marginBottom: "0.5rem",
+                        color: "#374151",
+                      }}
+                    >
+                      ઈમેલ *
+                    </label>
                     <input
                       type="email"
                       name="email"
                       required
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="form-input"
                       placeholder="તમારું ઈમેલ સરનામું"
+                      style={{ fontSize: "1rem" }}
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-2">શહેર *</label>
+                    <label
+                      style={{
+                        display: "block",
+                        fontSize: "0.875rem",
+                        fontWeight: "500",
+                        marginBottom: "0.5rem",
+                        color: "#374151",
+                      }}
+                    >
+                      શહેર *
+                    </label>
                     <input
                       type="text"
                       name="city"
                       required
-                      pattern="[a-zA-Zઅ-હ\s]+"
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="form-input"
                       placeholder="તમારું શહેર (ફક્ત અક્ષરો)"
+                      style={{ fontSize: "1rem" }}
                     />
                   </div>
                 </div>
 
-                <div className="mt-6 flex gap-4">
+                <div
+                  style={{
+                    marginTop: "2rem",
+                    display: "flex",
+                    gap: "1rem",
+                  }}
+                >
                   <button
                     type="button"
                     onClick={() => {
                       setShowUserInfo(false)
                       setCurrentIndex(questions.length - 1)
                     }}
-                    className="flex-1 py-3 px-6 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+                    className="btn btn-secondary"
                     disabled={submitting}
+                    style={{ flex: "1" }}
                   >
                     પાછા જાઓ
                   </button>
-                  <button
-                    type="submit"
-                    disabled={submitting}
-                    className="flex-1 py-3 px-6 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
+                  <button type="submit" disabled={submitting} className="btn btn-primary" style={{ flex: "1" }}>
                     {submitting ? "સબમિટ થઈ રહ્યું છે..." : "પરિણામ જુઓ"}
                   </button>
                 </div>
@@ -298,42 +440,145 @@ export default function Survey() {
 
           {/* Results */}
           {showResult && result && (
-            <div className="p-6 text-center">
-              <div className="text-6xl mb-6">🎯</div>
-              <h2 className="text-3xl font-bold text-blue-600 mb-4">{result.result}</h2>
-              <p className="text-gray-700 mb-8 text-lg leading-relaxed">{result.description}</p>
+            <div style={{ padding: "2rem", textAlign: "center" }}>
+              <div style={{ fontSize: "4rem", marginBottom: "1.5rem" }}>🎯</div>
+              <h2
+                style={{
+                  fontSize: "2rem",
+                  fontWeight: "700",
+                  color: "#3b82f6",
+                  marginBottom: "1rem",
+                }}
+              >
+                {result.result}
+              </h2>
+              <p
+                style={{
+                  color: "#6b7280",
+                  marginBottom: "2rem",
+                  fontSize: "1.125rem",
+                  lineHeight: "1.75",
+                }}
+              >
+                {result.description}
+              </p>
 
-              <div className="grid grid-cols-3 gap-4 mb-8">
-                <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-lg">
-                  <div className="text-3xl font-bold text-blue-600">{result.counts.vata}</div>
-                  <div className="text-sm text-gray-600 mt-1">વાત</div>
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(3, 1fr)",
+                  gap: "1rem",
+                  marginBottom: "2rem",
+                }}
+              >
+                <div
+                  className="stat-card"
+                  style={{
+                    background: "linear-gradient(135deg, #dbeafe, #bfdbfe)",
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: "2rem",
+                      fontWeight: "700",
+                      color: "#3b82f6",
+                    }}
+                  >
+                    {result.counts.vata}
+                  </div>
+                  <div
+                    style={{
+                      fontSize: "0.875rem",
+                      color: "#6b7280",
+                      marginTop: "0.25rem",
+                    }}
+                  >
+                    વાત
+                  </div>
                 </div>
-                <div className="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-lg">
-                  <div className="text-3xl font-bold text-green-600">{result.counts.pitta}</div>
-                  <div className="text-sm text-gray-600 mt-1">પિત્ત</div>
+                <div
+                  className="stat-card"
+                  style={{
+                    background: "linear-gradient(135deg, #dcfce7, #bbf7d0)",
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: "2rem",
+                      fontWeight: "700",
+                      color: "#16a34a",
+                    }}
+                  >
+                    {result.counts.pitta}
+                  </div>
+                  <div
+                    style={{
+                      fontSize: "0.875rem",
+                      color: "#6b7280",
+                      marginTop: "0.25rem",
+                    }}
+                  >
+                    પિત્ત
+                  </div>
                 </div>
-                <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-6 rounded-lg">
-                  <div className="text-3xl font-bold text-purple-600">{result.counts.kapha}</div>
-                  <div className="text-sm text-gray-600 mt-1">કફ</div>
+                <div
+                  className="stat-card"
+                  style={{
+                    background: "linear-gradient(135deg, #f3e8ff, #e9d5ff)",
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: "2rem",
+                      fontWeight: "700",
+                      color: "#9333ea",
+                    }}
+                  >
+                    {result.counts.kapha}
+                  </div>
+                  <div
+                    style={{
+                      fontSize: "0.875rem",
+                      color: "#6b7280",
+                      marginTop: "0.25rem",
+                    }}
+                  >
+                    કફ
+                  </div>
                 </div>
               </div>
 
-              <div className="space-y-4">
+              <div style={{ display: "flex", flexDirection: "column", gap: "1rem", alignItems: "center" }}>
                 <a
                   href="/api/export-csv"
-                  className="inline-block py-3 px-8 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold"
+                  style={{
+                    display: "inline-block",
+                    padding: "0.75rem 2rem",
+                    backgroundColor: "#16a34a",
+                    color: "white",
+                    borderRadius: "0.5rem",
+                    textDecoration: "none",
+                    fontWeight: "600",
+                    fontSize: "1rem",
+                  }}
                 >
                   📊 CSV ડાઉનલોડ કરો
                 </a>
 
-                <div className="mt-4">
-                  <button
-                    onClick={() => window.location.reload()}
-                    className="py-2 px-6 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
-                  >
-                    નવું સર્વે શરૂ કરો
-                  </button>
-                </div>
+                <button
+                  onClick={() => window.location.reload()}
+                  style={{
+                    padding: "0.5rem 1.5rem",
+                    backgroundColor: "#6b7280",
+                    color: "white",
+                    borderRadius: "0.5rem",
+                    border: "none",
+                    cursor: "pointer",
+                    fontSize: "0.875rem",
+                  }}
+                >
+                  નવું સર્વે શરૂ કરો
+                </button>
               </div>
             </div>
           )}
